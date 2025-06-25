@@ -1,0 +1,4 @@
+Name,Location,Status,Role,Manufacturer,Model,Platform
+{%- for device in queryset %} {# Loop through each device in the queryset #}
+{{ device.name }},{{ device.location.name }},{{ device.status.name }},{{ device.role.name }},{{ device.device_type.manufacturer.name }}, {{ device.device_type.model }},{{ device.platform.name }}
+{%- endfor %} {# End of the loop #}
