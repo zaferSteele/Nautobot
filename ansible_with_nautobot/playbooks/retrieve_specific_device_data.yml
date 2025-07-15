@@ -1,0 +1,39 @@
+# This playbook retrieves information about a specific device from Nautobot using the API filter.
+# It then loops through the result and prints the device name.
+#  Example command from the ansible_with_nautobot directory: ansible-playbook -i inventory/hosts playbooks/retrieve_specific_device_data.yml
+
+- name: "Retrieve devices from the Nautobot Inventory"
+  hosts: n1                  # Target host or group where this playbook runs, this is the Nautobot instance
+  connection: ssh            # Connect via SSH
+  gather_facts: false        # Skip gathering system facts to make the playbook run faster
+  vars:
+    NAUTOBOT_URL: http://192.168.3.2:8001 # Base URL for Nautobot API (Replace with you own here)
+    NAUTOBOT_TOKEN: "014239586a4ba1c446774c47da46dc0b56f9f78f" ## API token for authentication (Replace with your own here)
+
+  tasks:
+    # First task: retrieve only the devices that match a certain filter from Nautobot
+  - name: "Retrieve devies and set as a fact"
+    ansible.builtin.set_fact:
+      nautobot_devices:
+        "{{ query('networktocode.nautobot.lookup', 
+        'devices', 
+        api_filter='name=WayneEntFW1', 
+        api_endpoint=NAUTOBOT_URL, 
+        token=NAUTOBOT_TOKEN) 
+        }}"
+        # The query contains the following respectively
+        # Lookup plugin to Read the data of Nautobot
+        # Resource type we want: devices
+        # Filter so we only get the device named 'WayneEntFW1', replace with your specifc devcie name here
+        # Nautobot server endpoint
+        # Authentication token
+        # The filtered result (a list with matching devices) is saved into a new variable called 'nautobot_devices'.
+
+    # Second task: loop over each item in the filtered list and display its name
+  - name: "Loop over devices and debug name of each device"
+    ansible.builtin.debug:
+      msg: "The name of the device is {{ item.value.name }}."
+      # 'item' represents each device in the loop
+      # 'item.value.name' accesses the name property of each device
+    loop: "{{ nautobot_devices }}" 
+    # Even though we filtered by name, we still loop through the results in case multiple devices match

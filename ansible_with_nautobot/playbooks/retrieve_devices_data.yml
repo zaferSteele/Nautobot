@@ -1,0 +1,35 @@
+# This playbook retrieves device information from a Nautobot API and displays each device name.
+#  Example command from the ansible_with_nautobot directory: ansible-playbook -i inventory/hosts playbooks/retrieve_devices_data.yml
+
+- name: "Retrieve devices from the Nautobot Inventory"
+  hosts: n1                  # Target host or group where this playbook runs, this is the Nautobot instance
+  connection: ssh            # Connect via SSH
+  gather_facts: false        # Skip gathering system facts to make the playbook run faster
+  vars:
+    NAUTOBOT_URL: http://192.168.3.2:8001   # Base URL for Nautobot API (Replace with you own here)
+    NAUTOBOT_TOKEN: "014239586a4bg1c546674c4cda45dc0bc6f9f78f" # API token for authentication (Replace with your own here)
+
+  tasks:
+    # First task: fetch the list of devices from Nautobot and store it in a variable (a fact)
+  - name: "Retrieve devices and set as a fact"
+    ansible.builtin.set_fact:
+      nautobot_devices:
+        "{{ query('networktocode.nautobot.lookup',
+        'devices',
+        api_endpoint=NAUTOBOT_URL,
+        token=NAUTOBOT_TOKEN)
+        }}"
+        # The query contains the following respectively
+        # Lookup plugin to Read the data of Nautobot
+        # Resource type we want: devices
+        # Authentication token
+        # The result is stored in a new variable called 'nautobot_devices'
+
+    # Second task: loop through each device in the list and show its name
+  - name: "Loop over devices and debug name of each device"
+    ansible.builtin.debug:
+      msg: "The name of the device is {{ item.value.name }}."
+      # 'item' represents each device in the loop
+      # 'item.value.name' accesses the name property of each device
+    loop: "{{ nautobot_devices }}" 
+    # Loop through the 'nautobot_devices' list to process each device

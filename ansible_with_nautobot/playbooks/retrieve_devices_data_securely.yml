@@ -1,0 +1,36 @@
+# This playbook retrieves devices from the Nautobot API.
+# Instead of hardcoding the API URL and token, it uses environment variables, for additional security
+# Before running this playbook, make sure you run these commands in your shell, the following URL and Token are just examples:
+#   export NAUTOBOT_URL=http://192.168.5.1:8001
+#   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+# Ansible will automatically use these environment variables in the Nautobot lookup.
+#  Example command from the ansible_with_nautobot directory: ansible-playbook -i inventory/hosts playbooks/retrieve_devices_data_securely.yml
+
+- name: "Retrieve devices from the Nautobot Inventory"
+  hosts: n1                  # Target host or group where this playbook runs, this is the Nautobot instance
+  connection: ssh            # Connect via SSH
+  gather_facts: false        # Skip gathering system facts to make the playbook run faster
+
+  tasks:
+    # First task: retrieve the devices from Nautobot using the lookup plugin
+    # Because we did not pass api_endpoint or token directly, the plugin reads them from environment variables
+  - name: "Retrieve devies and set as a fact"
+    ansible.builtin.set_fact:
+      nautobot_devices:
+        "{{ query('networktocode.nautobot.lookup',
+        'devices')
+        }}"
+        # The query contains the following respectively
+        # Lookup plugin to Read the data of Nautobot      
+        # Resource type we want: devices
+        # The plugin automatically uses NAUTOBOT_URL and NAUTOBOT_TOKEN from the environment
+        # The result is stored in a new variable called 'nautobot_devices'
+
+    # Second task: loop over each device retrieved and print its name
+  - name: "Loop over devices and debug name of each device"
+    ansible.builtin.debug:
+      msg: "The name of the device is {{ item.value.name }}."
+      # 'item' represents each device in the loop
+      # 'item.value.name' accesses the name property of each device
+    loop: "{{ nautobot_devices }}" 
+    # Loop through the 'nautobot_devices' list to process each device
