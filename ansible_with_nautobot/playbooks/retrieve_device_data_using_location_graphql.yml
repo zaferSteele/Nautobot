@@ -1,0 +1,43 @@
+# This Ansible playbook connects to the nautobot instance/host (n1), sends a GraphQL query to Nautobot with a variable filter (location = London),
+# retrieves a list of devices with their names and locations, and then prints prints its name to the console. Useful for quickly verifying device data within specific locations.
+
+# Instead of hardcoding the API URL and token, it uses environment variables, for additional security
+# Before running this playbook, make sure you run these commands in your shell, the following URL and Token are just examples:
+#   export NAUTOBOT_URL=http://192.168.5.1:8001
+#   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+# Ansible will automatically use these environment variables in the Nautobot lookup.
+#  Example command from the ansible-nautobot directory: ansible-playbook -i inventory/hosts playbooks/retrieve_device_data_using_location_graphql.yml
+
+
+
+
+
+- name: "Retrieve devices and their data using given location using graphql" 
+  hosts: n1                 # Target host or group where this playbook runs, this is the Nautobot instance
+  connection: ssh           # Connect via SSH
+  gather_facts: false       # Skip gathering system facts to make the playbook run faster
+
+  tasks:
+    - name: "Create query string"  # Define the GraphQL query and variables we want to run
+      ansible.builtin.set_fact:
+        graph_variables:           # Define variables for the GraphQL query
+          nautobot_location: London  # Filter devices by location 'London', replace with your location here
+        query_string : |             # '|' means everything below is a multi-line string (preserves newlines)
+          query ($nautobot_location: [String]){
+            devices(location: $nautobot_location){
+              name                    # Ask for the device name field
+              location{
+                name                  # Ask for the name of the location for each device
+              }
+            }
+          }
+
+    - name: "send graphql string to Nautobot graphql api"       # Execute the query against Nautobot with variables
+      networktocode.nautobot.query_graphql:
+        query: "{{ query_string }}"   # Use the variable we just defined as the query
+        graph_variables: "{{ graph_variables }}" # Pass the defined variables
+      register: nautobot_devices                # Save the result in 'nautobot_devices' variable for later use
+
+    - name: "Print the devices name from their given location"           
+      ansible.builtin.debug:
+        var: nautobot_devices                   # Show the 'nautobot_devices' variable content

@@ -1,0 +1,36 @@
+# This Ansible playbook connects to the nautobot instance/host (n1), it uses the networktocode.nautobot.query_graphql module to send a GraphQL query to Nautobot to retrieve a list of devices (id and name),
+# then loops through each returned device and prints its name to the console. Useful for quickly verifying device data.
+
+# Instead of hardcoding the API URL and token, it uses environment variables, for additional security
+# Before running this playbook, make sure you run these commands in your shell, the following URL and Token are just examples:
+#   export NAUTOBOT_URL=http://192.168.5.1:8001
+#   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+# Ansible will automatically use these environment variables in the Nautobot lookup.
+#  Example command from the ansible-nautobot directory: ansible-playbook -i inventory/hosts playbooks/retrieve_device_data_using_graphql.yml
+
+
+- name: "Retrieve devices using graphql" 
+  hosts: n1                 # Target host or group where this playbook runs, this is the Nautobot instance
+  connection: ssh           # Connect via SSH
+  gather_facts: false       # Skip gathering system facts to make the playbook run faster
+
+  tasks:
+    - name: "Create query string"  # Define the GraphQL query we want to run
+      ansible.builtin.set_fact:
+        query_string: |            # '|' means everything below is a multi-line string (preserves newlines)
+          query{
+            devices{
+              id                   # Ask for the device ID field
+              name                 # Ask for the device name field
+            }
+          }
+
+    - name: "send graphql string to Nautobot graphql api"     
+      networktocode.nautobot.query_graphql:
+        query: "{{ query_string }}" # Use the variable we just defined as the query
+      register: nautobot_devices    # Save the result in 'nautobot_devices' variable for later use
+
+    - name: "Loop over devices and debug name of each device"  # Print each device name
+      ansible.builtin.debug:
+        msg: "The name of the device is {{ item.name }}."      # Message to display for each item
+      loop: "{{ nautobot_devices.data.devices }}"              # Go through each device in the result list
