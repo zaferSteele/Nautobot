@@ -1,0 +1,13 @@
+# This Ansible playbook demonstrates using a dynamic inventory (from Nautobot) to display all inventory groups and their hosts.
+# It connects locally (no SSH) because the inventory provides the device list dynamically.
+
+
+- name: "PLAY TESTING DYNAMIC INVENTORY"  # A play to test that the dynamic inventory works on all hosts
+  hosts: "all"                                  # Target all hosts returned by the dynamic inventory
+  gather_facts: false                            # Skip gathering default system facts (not needed for this test)
+  connection: "local"                           # Run locally on the control machine, not over SSH
+
+  tasks:
+    - name: "PRINT ALL INVENTORY GROUPS"                  # A simple test task to display all inventory groups
+      debug:
+        var: groups                              # Print the 'groups' variable showing all groups and their hosts

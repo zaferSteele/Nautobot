@@ -1,0 +1,12 @@
+# This Ansible playbook demonstrates using a dynamic inventory (from Nautobot) to target a specific group of devices annd print their hostname.
+# It connects locally (no SSH) because the inventory provides the device list dynamically.
+
+- name: "PLAY TESTING DYNAMIC INVENTORY"  # A play to test that the dynamic inventory works
+  hosts: "device_roles_edge"                    # Target all hosts in the group 'device_roles_edge' (grouped by role in Nautobot)
+  gather_facts: false                            # Skip gathering default system facts (not needed for this test)
+  connection: "local"                           # Run locally on the control machine, not over SSH
+
+  tasks:
+    - name: "PRINT DEVICES NAMES WITHIN SELECTED GROUP"                  # A simple test task to show what hosts are targeted
+      debug:
+        var: inventory_hostname                  # Print the current host name from the inventory

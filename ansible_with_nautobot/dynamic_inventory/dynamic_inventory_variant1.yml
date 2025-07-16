@@ -1,0 +1,27 @@
+# This is an Ansible dynamic inventory configuration file using the Nautobot inventory plugin.
+# It connects to a Nautobot instance, retrieves devices, and groups them dynamically.
+
+# Before running this inventory yaml file, make sure you run these commands in your shell, the following URL and Token are just examples:
+#   export NAUTOBOT_URL=http://192.168.5.1:8001
+#   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+# Ansible will automatically use these environment variables in the Nautobot lookup.
+# Playbooks for using this dynamic inventory is located in the "playbooks_using_dynamic_inventory_testing" folder
+#  Example command from the ansible_with_nautobot directory: ansible-playbook -i inventory/dynamic_inventory_variant1.yml playbooks_using_dynamic_inventory/test_dynamic_inventory_groups.yml
+
+
+plugin: networktocode.nautobot.inventory        # Use the Nautobot inventory plugin for dynamic inventory
+api_endpoint: http://192.168.5.1:8001         # URL of the Nautobot API endpoint
+validate_certs: False                           # Do not validate SSL certificates (only for testing or trusted networks)
+config_context: False                           # Do not include config context data from Nautobot
+
+# Define how to group the devices in the inventory dynamically.
+# Devices will be grouped by their roles, locations, and platforms.
+group_by:
+  - device_roles                                # Group devices by their role (e.g., router, switch, edge)
+  - locations                                   # Group devices by their location
+  - platforms                                   # Group devices by platform (e.g., Cisco IOS, Arista EOS)
+
+# Filter which devices to include in the inventory.
+# Only include devices that have a primary IP address defined.
+device_query_filters:
+  - has_primary_ip: 'true'                      # Filter for devices that have a primary IP
