@@ -1,0 +1,74 @@
+# This playbook adds multiple devices to a Nautobot inventory.
+
+#################################################REQUIREMENTS###################################################################### 
+
+# Pynautobot module should be installed on the Nautobot Instance, use the command "pip install pynautobot"
+
+# Make sure the following attributes are already created within Nautobot otherwise this will result in an error after execution.
+# 1. device_type
+# 2. role
+# 3. location
+# 4. tenant
+# 5. rack (this is optional)
+
+# Instead of hardcoding the API URL and token, it uses environment variables, for additional security
+# Before running this playbook, make sure you run these commands in your shell, the following URL and Token are just examples:
+#   export NAUTOBOT_URL=http://192.168.5.1:8001
+#   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+# Ansible will automatically use these environment variables in the Nautobot lookup.
+#  Example command from the ansible-nautobot directory: ansible-playbook -i inventory/hosts playbooks/write_operations/create_devices.yml
+
+#################################################################################################################################################
+
+- name: "Add devices to the Nautobot Inventory"     
+  hosts: n1                           # Target host or group where this playbook runs, this is the Nautobot instance
+  connection: ssh                     # Connect to the host using SSH
+  gather_facts: no                    # Skip gathering system facts to make the playbook run faster
+  vars:
+    # Load Nautobot URL from environment variable for security (avoid hardcoding)
+    nautobot_url: "{{ lookup('ansible.builtin.env', 'NAUTOBOT_URL')}}"
+    # Load Nautobot token (API key) from environment variable for security
+    nautobot_token: "{{ lookup('ansible.builtin.env', 'NAUTOBOT_TOKEN')}}"
+  
+  tasks:
+  - name: "Create devices"            
+    networktocode.nautobot.device:    # Use the Nautobot Ansible module to add a device
+      url: "{{ nautobot_url }}"       # Pass the Nautobot server URL
+      token: "{{ nautobot_token }}"   # Pass the API token for authentication
+      name: "{{ item['name'] }}"      # Device name (from loop item)
+      device_type: "{{ item['device_type'] }}" # Type of device
+      status: "{{ item['status'] }}"  # Operational status (e.g., Active)
+      role: "{{ item['role'] }}"      # Role (e.g., leaf/spine)
+      location: "{{ item['location'] }}" #Location
+      tenant: "{{ item['tenant'] }}"  # Tenant/customer who owns the device
+      rack: "{{ item['rack'] }}"      # Optional rack assignment
+      state: present                  # Ensure device exists (create if missing)
+    loop:                             # Loop over a list of devices to add
+    - name: lon-leaf-01               # First device definition (The attributes here and below can be changed as desired)
+      device_type: DCS‑7050X3
+      status: "Active"
+      role: "leaf"
+      location: "London"
+      rack: Rack1                     # Optional field
+      tenant: "Wayne Enterprises"
+    - name: lon-leaf-02               # Second device
+      device_type: DCS‑7050X3
+      status: "Active"
+      role: "leaf"
+      location: "London"
+      rack: Rack1
+      tenant: "Wayne Enterprises"
+    - name: lon-leaf-03               # Third device
+      device_type: DCS‑7050X3
+      status: "Active"
+      role: "leaf"
+      location: "London"
+      tenant: "Wayne Enterprises"
+      rack: Rack1
+    - name: lon-leaf-04               # Fourth device
+      device_type: DCS‑7050X3
+      status: "Active"
+      role: "leaf"
+      location: "London"
+      tenant: "Wayne Enterprises"
+      rack: Rack1
