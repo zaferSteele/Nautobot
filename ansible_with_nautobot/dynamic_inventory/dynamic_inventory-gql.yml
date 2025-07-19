@@ -1,0 +1,60 @@
+# This YAML defines a dynamic Ansible inventory using the Nautobot GraphQL plugin.
+# It connects to the specified Nautobot API endpoint, queries devices filtered by location (London),
+# retrieves details such as name, tenant, platform, device type, and role,
+# includes each device's primary IP (required for ansible_host),
+# and groups the devices in the inventory based on tenant, platform, model, role, and location.
+
+#######################################################################################################
+
+# REQUIREMENTS:
+# Installation of netutils: "pip install netutils"
+# Instalation of pynautobot: "pip install pynautobot"
+# Make sure you run these commands in your shell, the following URL and Token are just examples:
+#   export NAUTOBOT_URL=http://192.168.5.1:8001
+#   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+# TEST:
+# To test the inventory file use the command: "ansible-inventory -i dynamic_inventory-gql.yml --list"
+
+#######################################################################################################
+
+
+
+
+
+
+# This tells Ansible to use the Nautobot GraphQL inventory plugin
+plugin: networktocode.nautobot.gql_inventory
+
+# The Nautobot API endpoint (URL to your Nautobot instance)
+api_endpoint: http://192.168.5.1:8001
+
+# The GraphQL query section, defines what data to retreive and how to filter it
+query:
+  devices:             # We are querying for devices
+    filters:           # Apply filters to limit the results
+      location: London # Only retrieve devices located in London
+    id:                # Include the device's unique ID in the results
+    name:              # Include the device name
+    primary_ip4:       # Inlcude Ipv4 address
+      host:            # specifically, the host IP address
+    location:          # Include nested data about the location
+      name:            # specifically, include the location name
+    tenant:            # Include tenant information
+      name:            # specifically, the tenant name
+    platform:          # Include platform information
+      name:            # platform name
+      manufacturer:    # Include the manufacturer info of the platform
+        name:          # specifically, manufacturer name
+    device_type:       # Include device type information
+      model:           # specifically, the model of the device type
+    role:              # Include device role information
+      name:            # specifically, the role name
+
+# group_by defines how the devices should be grouped in the inventory
+group_by:
+  - tenant.name        # Group devices by tenant name
+  - platform.name      # Group devices by platform name
+  - device_type.model  # Group devices by device model
+  - role.name          # Group devices by role name
+  - location.name      # Group devices by location name
