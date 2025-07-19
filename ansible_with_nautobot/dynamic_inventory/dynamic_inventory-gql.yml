@@ -18,11 +18,6 @@
 
 #######################################################################################################
 
-
-
-
-
-
 # This tells Ansible to use the Nautobot GraphQL inventory plugin
 plugin: networktocode.nautobot.gql_inventory
 
