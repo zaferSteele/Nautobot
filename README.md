@@ -99,7 +99,7 @@ ansible-playbook ansible_with_nautobot/playbooks/write_operations/create_devices
 
 * `pynautobot`
 * `nornir`
-* 'nornir-nautobot'
+* `nornir-nautobot`
 * `ansible`
 * `python-dotenv`
 
