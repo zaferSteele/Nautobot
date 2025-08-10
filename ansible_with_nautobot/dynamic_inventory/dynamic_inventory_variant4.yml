@@ -1,0 +1,51 @@
+# Ansible Dynamic Inventory Configuration (Nautobot GraphQL Plugin)
+# -----------------------------------------------------------------
+# This file configures Ansible to dynamically retrieve device hostnames,
+# their locations, and group them by thier location and NAPALM driver type from a Nautobot instance
+# using its GraphQL inventory plugin.
+
+# ----------------------
+# Prerequisites:
+# ----------------------
+# Before running this inventory file, you must set the following environment variables:
+#
+# Option 1 – Export directly in your shell:
+#   Example:
+#     export NAUTOBOT_URL=http://192.168.5.1:8001
+#     export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#     export NTC_NET_USERNAME=admin
+#     export NTC_NET_PASSWORD=admin
+#
+# Option 2 – Use the `creds.env` file:
+#   1. Navigate to the `ansible_with_nautobot` directory.
+#   2. Open the `creds.env` file and fill in your Nautobot URL and token.
+#   3. Save the file.
+#   4. Run:  source creds.env
+#
+# Note: Environment variables set using either method are not persistent
+#       and must be re-applied after a reboot or new shell session.
+
+# ----------------------
+# Testing the inventory:
+# ----------------------
+# To verify that Ansible can retrieve devices and groups from Nautobot, run from within the dynamic_inventory folder:
+#   ansible-inventory -i dynamic_inventory_variant4.yml --list
+
+# ----------------------
+# Running playbooks:
+# ----------------------
+# Playbooks that use this dynamic inventory are located in:
+#   playbooks_using_dynamic_inventory/
+#
+# Example (from the `ansible_with_nautobot` directory):
+#   ansible-playbook -i dynamic_inventory/dynamic_inventory_variant4.yml playbooks_using_dynamic_inventory/config_replace_eos_and_junos.yml
+
+plugin: networktocode.nautobot.gql_inventory  # Uses the Nautobot GraphQL inventory plugin to pull device info
+query:                                        # Defines the GraphQL query parameters
+  devices:                                    # Query block for retrieving device information
+    name:                                     # Retrieves the 'name' field of each device (used as the inventory hostname)
+    location:                                 # Retrieves the device's associated location data
+      name:                                   # Retrieves the 'name' of the location for grouping and filtering
+group_by:                                     # Automatically groups inventory based on specified fields
+  - location.name                             # Groups devices by their location name
+  - platform.napalm_driver                    # Groups devices by their NAPALM driver type (requires platform info in Nautobot)

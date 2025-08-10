@@ -5,7 +5,7 @@
 #   export NAUTOBOT_URL=http://192.168.5.1:8001
 #   export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 # Ansible will automatically use these environment variables in the Nautobot lookup.
-# Playbooks for using this dynamic inventory is located in the "playbooks_using_dynamic_inventory_testing" folder
+# Playbooks for using this dynamic inventory is located in the "playbooks_using_dynamic_inventory" folder
 #  Example command from the ansible_with_nautobot directory: ansible-playbook -i inventory/dynamic_inventory_variant2.yml playbooks_using_dynamic_inventory/test_dynamic_inventory_groups.yml
 
 

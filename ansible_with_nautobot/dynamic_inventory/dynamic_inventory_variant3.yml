@@ -34,7 +34,7 @@
 # Running playbooks:
 # ----------------------
 # Playbooks that use this dynamic inventory are located in:
-#   playbooks_using_dynamic_inventory_testing/
+#   playbooks_using_dynamic_inventory/
 #
 # Example (from the `ansible_with_nautobot` directory):
 #   ansible-playbook -i dynamic_inventory/dynamic_inventory_variant3.yml playbooks_using_dynamic_inventory/backup_all_devices.yml

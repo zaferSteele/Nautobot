@@ -1,0 +1,64 @@
+# Playbook Name: DEPLOY EOS & JUNOS CONFIGURATIONS
+# ------------------------------------------------
+# Purpose:
+# This playbook replaces the entire running configuration of Arista EOS
+# and Juniper Junos devices with baseline configurations stored in the
+# "baseline" folder. The configs are applied per location and matched to
+# the device hostname.
+#
+# IMPORTANT (Arista-specific notes):
+#  - eAPI must be enabled on Arista devices before running this playbook.
+#    For lab purposes, it’s preferable to use HTTP (not HTTPS) to avoid
+#    certificate issues and simplify setup.
+#  - As of this playbook's usage, Ansible may sometimes show an error
+#    when configuring Arista devices via NAPALM, even though the config
+#    was successfully replaced. Always verify the running configuration
+#    afterwards to ensure correctness.
+#
+# Requirements:
+#  - NAPALM installed on the Ansible control host - use the command "ansible-galaxy collection install napalm.napalm".
+#  - Environment variables `NTC_NET_USERNAME` and `NTC_NET_PASSWORD`
+#    must be set with device credentials.
+#  - Device host information must be available via nautobot inventory.
+
+- name: "DEPLOY EOS & JUNOS CONFIGURATIONS"
+  hosts: "eos,junos"                 # Target only EOS (Arista) and Junos (Juniper) hosts in inventory
+  gather_facts: false                 # Skip Ansible fact-gathering (not needed for this task)
+  connection: "local"                 # Run tasks locally; devices are reached via NAPALM, not SSH from Ansible
+
+  vars:
+    project_path: "{{ playbook_dir }}"                     # Path to the folder containing this playbook
+    backups_dir: "{{ project_path }}/network_backups"      # Path to store backups of existing configs
+    diffs_dir: "{{ project_path }}/diffs"                  # Path to store diff files showing changes
+    config_path: "{{ project_path }}/baseline/{{ location['name'] }}" # Path to baseline configs, organized by location
+    ansible_become: yes                                    # Enable privilege escalation
+    ansible_become_method: enable                          # Use 'enable' mode for devices that require it
+
+    # Optional arguments for NAPALM depending on platform
+    optional_args: >-
+      {% if platform['napalm_driver'] == 'eos' %}
+      {'transport': 'http', 'port': 80, 'validate_certs': 'false'} # Use HTTP for EOS in lab environments
+      {% else %}
+      {}
+      {% endif %}
+
+  tasks:
+
+    - name: "BUILD DIFFS DIRECTORY"
+      ansible.builtin.file:           # Creates the diffs directory if it doesn’t exist
+        path: "{{ diffs_dir }}/"
+        state: "directory"
+      run_once: true                   # Run this task only once, not per host
+
+    - name: "DEPLOY AND REPLACE JUNOS-EOS CONFIGURATIONS"
+      napalm.napalm.install_config:    # NAPALM module to install/replace device configurations
+        provider:                      # Connection details for each device
+          username: "{{ lookup('env', 'NTC_NET_USERNAME') }}" # Device username from environment variable
+          password: "{{ lookup('env', 'NTC_NET_PASSWORD') }}" # Device password from environment variable
+          host: "{{ ansible_host }}"                         # Host IP or hostname from inventory
+          optional_args: "{{ optional_args | from_yaml }}"   # Platform-specific connection settings
+        config_file: "{{ config_path }}/{{ ansible_host }}.cfg" # Baseline config file for this device
+        diff_file: "{{ project_path }}/diffs/{{ ansible_host }}.diffs" # File to store config differences
+        replace_config: true           # Completely replace existing configuration
+        commit_changes: true           # Commit the changes after applying them
+        dev_os: "{{ platform['napalm_driver'] }}" # OS type (eos or junos), from inventory/platform vars
