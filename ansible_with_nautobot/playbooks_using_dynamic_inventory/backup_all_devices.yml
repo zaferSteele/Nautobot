@@ -1,0 +1,59 @@
+---
+# This Ansible playbook connects to all devices listed in the dynamic inventory
+# (fetched from Nautobot) and creates configuration backups for each device.
+# Backups are saved in a folder called "network_backups" inside the playbook directory.
+
+- name: "BACKUP DEVICE CONFIGURATIONS"
+  # 'hosts: all' means run this playbook on all devices from the inventory
+  hosts: "all"
+
+  # We don't need system facts like OS, memory, etc., so we skip them to speed things up
+  gather_facts: false
+
+  # Use Ansible's network CLI connection method (for devices that support CLI access)
+  connection: "ansible.netcommon.network_cli"
+
+  vars:
+    # 'project_path' is the directory where the playbook is located
+    project_path: "{{ playbook_dir }}"
+
+    # This is where backups will be stored: playbook folder + "network_backups"
+    backups_dir: "{{ project_path }}/network_backups"
+
+    # Get the SSH username from the environment variable NTC_NET_USERNAME
+    ansible_user: "{{ lookup('env', 'NTC_NET_USERNAME') }}"
+
+    # Get the SSH password from the environment variable NTC_NET_PASSWORD
+    ansible_password: "{{ lookup('env', 'NTC_NET_PASSWORD') }}"
+
+    # Use privilege escalation (e.g., 'enable' mode on network devices)
+    ansible_become: yes
+
+    # Specify the method of privilege escalation: 'enable' for network devices
+    ansible_become_method: enable
+
+  tasks:
+    # ------------------------------
+    # Task 1: Create the backup folder
+    # ------------------------------
+    - name: "BUILD DIRECTORIES"
+      ansible.builtin.file:
+        # Path to the backup folder
+        path: "{{ backups_dir }}/"
+        # 'directory' means create this folder if it doesn’t exist
+        state: "directory"
+      # Only run this task once, not on every device
+      run_once: true
+
+    # ------------------------------
+    # Task 2: Backup device configurations
+    # ------------------------------
+    - name: "BACKUP ALL CONFIGURATIONS"
+      ansible.netcommon.cli_config:
+        # 'backup: yes' tells Ansible to retrieve and store the running config
+        backup: "yes"
+        backup_options:
+          # The backup filename will be the device's hostname (from inventory) + ".cfg"
+          filename: "{{ ansible_host }}.cfg"
+          # The directory where the backup will be saved
+          dir_path: "{{ backups_dir }}/"

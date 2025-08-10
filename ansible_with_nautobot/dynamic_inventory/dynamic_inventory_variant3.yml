@@ -1,0 +1,45 @@
+# Ansible Dynamic Inventory Configuration (Nautobot GraphQL Plugin)
+# -----------------------------------------------------------------
+# This file configures Ansible to dynamically retrieve device hostnames
+# from a Nautobot instance using its GraphQL inventory plugin.
+
+# ----------------------
+# Prerequisites:
+# ----------------------
+# Before running this inventory file, you must set the following environment variables:
+#
+# Option 1 – Export directly in your shell:
+#   Example:
+#     export NAUTOBOT_URL=http://192.168.5.1:8001
+#     export NAUTOBOT_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#
+#   Ansible will automatically use these variables for the Nautobot lookup.
+#
+# Option 2 – Use the `creds.env` file:
+#   1. Navigate to the `ansible_with_nautobot` directory.
+#   2. Open the `creds.env` file and fill in your Nautobot URL and token.
+#   3. Save the file.
+#   4. Run:  source creds.env
+#
+# Note: Environment variables set using either method are not persistent
+#       and must be re-applied after a reboot or new shell session.
+
+# ----------------------
+# Testing the inventory:
+# ----------------------
+# To verify that Ansible can retrieve devices from Nautobot, run from within the dynamic_inventory folder:
+#   ansible-inventory -i dynamic_inventory_variant3.yml --list
+
+# ----------------------
+# Running playbooks:
+# ----------------------
+# Playbooks that use this dynamic inventory are located in:
+#   playbooks_using_dynamic_inventory_testing/
+#
+# Example (from the `ansible_with_nautobot` directory):
+#   ansible-playbook -i dynamic_inventory/dynamic_inventory_variant3.yml playbooks_using_dynamic_inventory/backup_all_devices.yml
+
+plugin: networktocode.nautobot.gql_inventory  # Specifies the Nautobot GraphQL inventory plugin for dynamic device data retrieval
+query:                                        # Defines the GraphQL query parameters
+  devices:                                    # Query block for retrieving device information
+    name:                                     # Requests the 'name' field of each device to identify them
