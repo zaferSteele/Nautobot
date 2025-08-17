@@ -5,13 +5,19 @@ bgp_config:
     log_neighbor_changes: true
     router_id:
       address: "10.0.10.3"
-  redistribute:
-    - connected:
-        metric: 0
   neighbor:
-    - address: "10.10.0.5"
+    - address: "10.0.10.1"
       remote_as: "65251"
-    - address: "10.10.0.13"
+      update_source: "Loopback0"
+      route_reflector_client: true
+    - address: "10.0.10.2"
       remote_as: "65251"
-    - address: "10.10.0.18"
+      update_source: "Loopback0"
+      route_reflector_client: true
+    - address: "10.0.20.3"
+      remote_as: "65252"
+      ebgp_multihop: 5
+      update_source: "Loopback0"
+      soft_reconfiguration_inbound: true
+    - address: "10.0.20.4"
       remote_as: "65252"

@@ -1,0 +1,49 @@
+# Playbook Name: DEPLOY IOS CONFIGURATIONS
+# ----------------------------------------
+# Purpose:
+# This playbook configures Cisco IOS devices using Ansible collections.
+# It performs two key tasks:
+#   1. Configures Layer 3 interfaces with IP addresses retrieved from inventory.
+#   2. Deploys BGP configuration based on data provided by Nautobot’s config context.
+#
+# Notes (IOS-specific):
+#  - This playbook connects directly to IOS devices using the network_cli connection plugin.
+#  - Authentication relies on environment variables for credentials:
+#      NTC_NET_USERNAME and NTC_NET_PASSWORD.
+#  - The playbook intentionally skips GigabitEthernet3 (often reserved for management).
+#
+# Requirements:
+#  - Ansible collection `cisco.ios` must be installed:
+#       ansible-galaxy collection install cisco.ios
+#  - Environment variables must be exported with valid credentials.
+#  - Nautobot inventory must provide interface IP addresses and config context with BGP data.
+
+---
+
+- name: "DEPLOY IOS CONFIGURATIONS"
+  hosts: "ios"                          # Target only IOS devices in inventory
+  gather_facts: false                   # Skip fact-gathering (not required for this playbook)
+  connection: "ansible.netcommon.network_cli"  # Use CLI connection for IOS (SSH-based)
+
+  vars:
+    ansible_user: "{{ lookup('env', 'NTC_NET_USERNAME') }}"   # Username pulled from environment variable
+    ansible_password: "{{ lookup('env', 'NTC_NET_PASSWORD') }}" # Password pulled from environment variable
+
+  tasks:
+
+    - name: "CONFIGURE L3 INTERFACES"
+      cisco.ios.ios_l3_interfaces:       # Cisco IOS module for configuring Layer 3 interfaces
+        config:
+          - name: "{{ item['name'] }}"   # Interface name from inventory (e.g., GigabitEthernet0/1)
+            ipv4:
+              - address: "{{ item['ip_addresses'][0]['address'] }}" # Assign first IP address from Nautobot
+        state: replaced                  # Ensure configuration matches exactly what is defined
+      loop: "{{ interfaces | rejectattr('name', 'equalto', 'GigabitEthernet1') | selectattr('ip_addresses', 'ne', []) | list }}"
+      # Exclude Mgmt/console interface
+      # Skip interfaces without IPs
+      # Convert result to list
+
+    - name: "DEPLOY BGP CONFIGURATION"
+      cisco.ios.ios_bgp_global:          # Cisco IOS module for configuring global BGP
+        config: "{{ config_context['bgp_config'] }}" # Pull BGP config from Nautobot config context
+        state: replaced                  # Ensure deployed BGP config replaces existing settings
