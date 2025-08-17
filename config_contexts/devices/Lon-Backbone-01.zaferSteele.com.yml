@@ -16,8 +16,6 @@ bgp_config:
       route_reflector_client: true
     - address: "10.0.20.3"
       remote_as: "65252"
-      ebgp_multihop: "5"
       update_source: "Loopback0"
-      soft_reconfiguration_inbound: true
     - address: "10.0.20.4"
       remote_as: "65252"
