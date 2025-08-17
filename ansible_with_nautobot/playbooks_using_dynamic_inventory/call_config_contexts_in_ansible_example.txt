@@ -1,0 +1,13 @@
+# A more scalable alternative to gathering config contexts via dynamic inventory
+# is using the `networktocode.nautobot.query_graphql` module from the Ansible Nautobot collection.
+# Unlike dynamic inventory, which queries all devices at playbook runtime, this module
+# gathers data per device only when that device is being automated.  
+# You can call this module as needed and leverage Ansible’s built-in concurrency across devices.
+
+- name: "GET DEVICE INFO FROM GRAPHQL"  
+  networktocode.nautobot.query_graphql:
+    url: "{{ nautobot_url }}"
+    token: "{{ nautobot_token }}"
+    validate_certs: false
+    query: "{{ query_string }}"
+    update_hostvars: true # bypass using the "config_context" key to access config context data
