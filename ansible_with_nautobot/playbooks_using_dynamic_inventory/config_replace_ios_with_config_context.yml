@@ -38,7 +38,7 @@
             ipv4:
               - address: "{{ item['ip_addresses'][0]['address'] }}" # Assign first IP address from Nautobot
         state: replaced                  # Ensure configuration matches exactly what is defined
-      loop: "{{ interfaces | rejectattr('name', 'equalto', 'GigabitEthernet1') | selectattr('ip_addresses', 'ne', []) | list }}"
+      loop: "{{ interfaces | rejectattr('name', 'equalto', 'GigabitEthernet3') | selectattr('ip_addresses', 'ne', []) | list }}"
       # Exclude Mgmt/console interface
       # Skip interfaces without IPs
       # Convert result to list
